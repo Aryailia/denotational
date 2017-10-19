@@ -1,0 +1,174 @@
+/**
+ * 
+ * 
+ * Optimisation Decisions
+ * ======================
+ * Because this is low level to faciliate basic functionality, allowing for
+ * a bunch of micro operations. According to J.S. Dalton, author of Lodash, the
+ * default behavior of .map is fairly slow.
+ * 
+ * Taking advantage of ES6 since this is for bot development which is done in
+ * Node so can rely on ES6 features being present. Using var instead of let
+ * because it slows down in Javascript. 
+ * Not using arrow operator because it is slower than a function declaration,
+ * and not many opportunities to use it anyway.
+ * 
+ * .forEach() is inherently slower than a imperative loop. Post-incrementation
+ * is slower than pre-incrementation. A for loop has one more comparison than a
+ * while loop.
+ * 
+ * Choosing to do implict type checking. Probably have to go through to make
+ * sure this is done in all the functions.
+ * 
+ * Keep in mind that I do not have a dedicated testing suite for performance
+ * so these decisions are based more on theory rather than actual testing.
+ */
+
+const toExport = {
+  /**
+   * To reverse the order of #flow so you can specify {source} at the start
+   * @param {Array} source
+   * @param {...Array<function():Array, ...>} fnList
+   * @returns {Array}
+   */
+  chain: function (source, ...fnList) {
+    return(toExport.curry.apply(null, fnList)(source));
+  },
+
+  /**
+   * @todo replace slice
+   * @param {...Array<function():Array, ...>} fnList
+   * @returns {function(Array)}
+   */
+  curry: function (...fnList) {
+    return(function (seed) {
+      const len = fnList == null ? 0 : fnList.length;
+      var entry;
+      var fnIndex = -1; while (++fnIndex < len) {
+        entry = fnList[fnIndex];
+        seed = entry[0].apply(null, entry.slice(1).concat([seed]));
+      }
+      return(seed);
+    });
+  },
+
+  /**
+   * Same as map but with the guarentee that an array isn't being made
+   * @param {Array} source
+   * @returns {Array} Exact same array as source
+   */
+  each: function (fn, source) {
+    const len = (source == null) ? 0 : source.length;
+    var index = -1; while (++index < len) {
+      fn(source[index], index);
+    }
+    return(source);
+  },
+
+  /**
+   * Reduce
+   * @param {*} accumulator
+   * @param {function(*,*, number)} fn
+   * @param {Array} source
+   * @returns {Array} Exact same array as source
+   */
+  foldLeft: function (accumulator, fn, source) {
+    var result = accumulator;
+    const len = (source == null) ? 0 : source.length;
+    var index = -1; while (++index < len) {
+      accumulator = fn(accumulator, source[index], index);
+    }
+    return result;
+  },
+
+
+  /**
+   * @param {function(*,number)} fn
+   * @param {Array} source
+   * @returns {Array}
+   */
+  map: function (fn, source) {
+    const len = (source == null) ? 0 : source.length;
+    const result = new Array(len);
+    var index = -1; while (++index < len) {
+      result[index] = fn(source[index], index);
+    }
+    return(result);
+  },
+
+  /**
+   * @todo Look into if pre-allocating array entire array {new Array(length)}
+   * and reducing length after would be faster than growing array
+   * @param {function(*,number)} fn
+   * @param {Array} source
+   * @returns {Array}
+   */
+  sieve: function (fn, source) {
+    const len = (source == null) ? 0 : source.length;
+    const result = [];
+    var resultIndex = -1;
+    var sourceIndex = -1; while (++sourceIndex < len) {
+      if (fn(source[sourceIndex], sourceIndex)) {
+        result[++resultIndex] = source[sourceIndex];
+      }
+    }
+    return(result);
+  },
+
+  /**
+   * @param {number} size The size of individual chunks
+   * @param {Array} source
+   * @returns {Array}
+   */
+  chunk: function (size, source) {
+    const sourceLength = (source == null) ? 0 : source.length;
+    const chunkSize = (size <= 0) ? sourceLength : size;
+    // Non-numbers test false, so have {size} as false to fail early
+    const result = new Array(Math.ceil(sourceLength / chunkSize));
+    var resultIndex = -1;
+    var chunkIndex, chunkPiece; // var calls in the main function namespace 
+
+    // Adds another row if don't start {sourceIndex} at 0 and post-increment
+    var sourceIndex = 0; while (sourceIndex < sourceLength) {
+      chunkPiece = new Array(chunkSize);
+      chunkIndex = -1; while (++chunkIndex < chunkSize) {
+        chunkPiece[chunkIndex] = source[sourceIndex++]; 
+      }
+      result[++resultIndex] = chunkPiece;
+    }
+    return(result);
+  },
+
+  /**
+   * @param {Array} source
+   * @returns {Array}
+   */
+  unique: function (source) {
+    // Faster to use .has() than constructor of Set(), (ie. {Set(source)}) 
+    const temp = new Set();
+    const len = (source == null) ? 0 : source.length;
+    var index = -1; while (++index < len) {
+      if (!temp.has(source[index])) {
+        temp.add(source[index]);
+      }
+    }
+    return([...temp]);
+  },
+
+  /**
+   * @todo cleanup, probably want to find the max length of the {arrList}
+   * @param {...Array} arrList The last element is actually source
+   * @param {Array} source 
+   * @returns {Array<Array>}
+   */
+  zip: function (...arrList) {
+    const source = arrList.pop();
+    return(toExport.map(function (entry, sourceIndex) { return(
+      [entry].concat(toExport.map(function (arr) { return(
+        arr[sourceIndex]);
+      }, arrList)));
+    }, source));
+  },
+};
+
+module.exports = toExport;
