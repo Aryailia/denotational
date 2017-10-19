@@ -65,6 +65,9 @@ const toExport = {
     return(source);
   },
 
+  flatten: function () {
+  },
+
   /**
    * Reduce
    * @param {*} accumulator
@@ -138,6 +141,25 @@ const toExport = {
     }
     return(result);
   },
+  
+  range: function (start, end, step) {
+    switch (arguments.length) {
+      case 1: end = start; start = 0;
+      case 2: step = 1;
+      case 3: break;
+      case 0: default: throw new SyntaxError('Expected 1-3 arguments.');
+    }
+    var index = -1;
+    var len = Math.max(Math.ceil((end - start) / step), 0); // Excludes {end}
+    var output = new Array(len);
+    while (len--) {
+      output[++index] = start;
+      start += step;
+    }
+    return output;
+  },
+
+  
 
   /**
    * @param {Array} source
