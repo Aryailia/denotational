@@ -25,6 +25,17 @@
  */
 
 const toExport = {
+  mixin: function (obj, privateVars, ...mixinList) {
+    mixinList.forEach(function (mixin) {
+      Object.keys(mixin).forEach(function (key) {
+        obj[key] = function (...args) {
+          return mixin[key].apply(null, privateVars.concat(args));
+        };
+      });
+    })
+    return obj;
+  },
+
   /**
    * To reverse the order of #flow so you can specify {source} at the start
    * @param {Array} source
@@ -76,12 +87,11 @@ const toExport = {
    * @returns {Array} Exact same array as source
    */
   foldLeft: function (accumulator, fn, source) {
-    var result = accumulator;
     const len = (source == null) ? 0 : source.length;
     var index = -1; while (++index < len) {
       accumulator = fn(accumulator, source[index], index);
     }
-    return result;
+    return(accumulator);
   },
 
 
