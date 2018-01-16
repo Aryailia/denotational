@@ -24,7 +24,7 @@
  * so these decisions are based more on theory rather than actual testing.
  */
 
-const toExport = {
+const _ = {
   mixin: function (obj, privateVars, ...mixinList) {
     mixinList.forEach(function (mixin) {
       Object.keys(mixin).forEach(function (key) {
@@ -35,15 +35,15 @@ const toExport = {
     })
     return obj;
   },
-
+  
   /**
    * To reverse the order of #flow so you can specify {source} at the start
    * @param {Array} source
    * @param {...Array<function():Array, ...>} fnList
    * @returns {Array}
    */
-  chain: function (source, ...fnList) {
-    return(toExport.curry.apply(null, fnList)(source));
+  chain(source, ...fnList) {
+    return(_.curry.apply(null, fnList)(source));
   },
 
   /**
@@ -51,16 +51,51 @@ const toExport = {
    * @param {...Array<function():Array, ...>} fnList
    * @returns {function(Array)}
    */
-  curry: function (...fnList) {
-    return(function (seed) {
-      const len = fnList == null ? 0 : fnList.length;
-      var entry;
-      var fnIndex = -1; while (++fnIndex < len) {
-        entry = fnList[fnIndex];
-        seed = entry[0].apply(null, entry.slice(1).concat([seed]));
+  curry(...fnAndArgList) {
+    console.log('\n\n', fnAndArgList)
+    return(function (source) {
+      const len = fnAndArgList == null ? 0 : fnAndArgList.length;
+      var fn, args;
+      var index = -2; while ((index += 2) < len) { // func + arg pairs
+        fn = fnAndArgList[index]
+        args = fnAndArgList[index + 1];
+        console.log(index, fn, args);
+        source = fn.apply(null, args.concat([source]));
       }
-      return(seed);
+      return(source);
     });
+  },
+
+  /**
+   * Monad non-mathematically to refer to anything that needs to dot chain
+   * Used for interfacing with things like [].reduce in chain() or curry()
+   * 
+   * eg.
+   * _.chain([1,2,3,4,5]
+   * , _.map, [x=>x+1]
+   * , _.unmonad(Array.prototype.map), [x=>x*2]
+   * );
+   * => [4, 6, 8, 10, 12]
+   * 
+   * May wish to call remonad() afterwards
+   * @param {function} fn Whatever dot chain function that needs to be wrapped
+   * @returns {function}
+   */
+  unmonad(fn) {
+    return(function (...args) {
+      const source = args[args.length - 1];
+      args.length -= 1; // Pop
+      return(fn.apply(source, args));
+    });
+  },
+
+  /**
+   * Just puts this in an array, the converse to unmonad()
+   * @param {*} source
+   * @returns {Array}
+   */
+  remonad(source) {
+    return([source]);
   },
 
   /**
@@ -195,12 +230,12 @@ const toExport = {
    */
   zip: function (...arrList) {
     const source = arrList.pop();
-    return(toExport.map(function (entry, sourceIndex) { return(
-      [entry].concat(toExport.map(function (arr) { return(
+    return(_.map(function (entry, sourceIndex) { return(
+      [entry].concat(_.map(function (arr) { return(
         arr[sourceIndex]);
       }, arrList)));
     }, source));
   },
 };
 
-module.exports = toExport;
+module.exports = _;
