@@ -52,14 +52,12 @@ const _ = {
    * @returns {function(Array)}
    */
   curry(...fnAndArgList) {
-    console.log('\n\n', fnAndArgList)
     return(function (source) {
       const len = fnAndArgList == null ? 0 : fnAndArgList.length;
       var fn, args;
       var index = -2; while ((index += 2) < len) { // func + arg pairs
         fn = fnAndArgList[index]
         args = fnAndArgList[index + 1];
-        console.log(index, fn, args);
         source = fn.apply(null, args.concat([source]));
       }
       return(source);
