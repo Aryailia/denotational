@@ -53,7 +53,7 @@ test('FFP.curry and FFP.chain', t => {
   t.deepEqual(threeArgs(test), [3,5,7,9,11,13,15,17,19,1], 'again: curry(first, second, third) - of array');
 
   t.comment('currying a number');
-  t.deepEqual($.curry()(1), 1, 'curry zero arguments');
+  t.deepEqual($.curryg()(1), 1, 'curry zero arguments');
   t.deepEqual(oneArgs(1), [2], 'curry(one) - of number');
   t.deepEqual(twoArgs(1), [4], 'curry(first, second) - of number');
   t.deepEqual(threeArgs(1), [3], 'curry(first, second, third) - of number');

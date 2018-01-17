@@ -25,12 +25,16 @@ function library(Utils, $) {
       return result;
     };
 
+    prototype.takeWrap = function (count) {
+      return Lazy(prototype.take(count));
+    };
+
     prototype.takeAll = function () {
       return prototype.take(_INFINITY);
     };
 
-    prototype.seq = function () {
-      return Lazy(prototype.takeAll());
+    prototype.takeAllWrap = prototype.seq = function () {
+      return takeWrap.takeWrap(_INFINITY);
     };
 
     // prototype.test = function () {
