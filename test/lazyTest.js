@@ -1,22 +1,67 @@
-const $ = require('../lazy');
+const tape = require('tape');
+const Utils = require('../fp/utils');
+const $ = require('../fp/functionalFp')(Utils);
+const {baseFlattenMin1, isArrayLike, pushArray, inlineSlice} = Utils;
+const Lazy = require('../fp/lazy')(Utils, $);
 
 (function () {
   var test = [1,2,3,4,5,6,7,8,9,0];
   var args;
-  args = [0,0]; console.log(`_inlineSlice(${args.join(',')})`, _inlineSlice.apply(null, args).apply(null, test));
-  args = [0,1]; console.log(`_inlineSlice(${args.join(',')})`, _inlineSlice.apply(null, args).apply(null, test));
-  args = [1,0]; console.log(`_inlineSlice(${args.join(',')})`, _inlineSlice.apply(null, args).apply(null, test));
-  args = [1,1]; console.log(`_inlineSlice(${args.join(',')})`, _inlineSlice.apply(null, args).apply(null, test));
-  args = [0,3]; console.log(`_inlineSlice(${args.join(',')})`, _inlineSlice.apply(null, args).apply(null, test));
-  args = [3,1]; console.log(`_inlineSlice(${args.join(',')})`, _inlineSlice.apply(null, args).apply(null, test));
-  args = [3,4]; console.log(`_inlineSlice(${args.join(',')})`, _inlineSlice.apply(null, args).apply(null, test));
+  args = [0,0]; console.log(`_inlineSlice(${args.join(',')})`, inlineSlice.apply(null, args).apply(null, test));
+  args = [0,1]; console.log(`_inlineSlice(${args.join(',')})`, inlineSlice.apply(null, args).apply(null, test));
+  args = [1,0]; console.log(`_inlineSlice(${args.join(',')})`, inlineSlice.apply(null, args).apply(null, test));
+  args = [1,1]; console.log(`_inlineSlice(${args.join(',')})`, inlineSlice.apply(null, args).apply(null, test));
+  args = [0,3]; console.log(`_inlineSlice(${args.join(',')})`, inlineSlice.apply(null, args).apply(null, test));
+  args = [3,1]; console.log(`_inlineSlice(${args.join(',')})`, inlineSlice.apply(null, args).apply(null, test));
+  args = [3,4]; console.log(`_inlineSlice(${args.join(',')})`, inlineSlice.apply(null, args).apply(null, test));
 })();
+
+
+// Base Flatten
+(function () {
+  var test = [[1,2,3, [4,5,[6],7,[8],9]], 10, [[11],13],14];
+  var count;
+  console.log('Base', test);
+  console.log('Expected behaviour - min 1', baseFlattenMin1([], 0).apply(null, test));
+  count = 1; console.log(`Base flatten - ${count}`, baseFlattenMin1([], count).apply(null, test));
+  count = 2; console.log(`Base flatten - ${count}`, baseFlattenMin1([], count).apply(null, test));
+  count = 3; console.log(`Base flatten - ${count}`, baseFlattenMin1([], count).apply(null, test));
+  count = 4; console.log(`Base flatten - ${count}`, baseFlattenMin1([], count).apply(null, test));
+  count = 5; console.log(`Base flatten - ${count}`, baseFlattenMin1([], count).apply(null, test));
+
+  console.log(`Base flatten - Empty Array`, baseFlattenMin1([], 1).apply(null, []));
+  console.log(`Base flatten - Empties`, baseFlattenMin1([], 1).apply(null, [1, [], 2, [3, []]]));
+
+  console.log('flatten', $.flatten(5).apply(null, [1,2,3,[4,5,[],[6,[7,[8],[[9]]]]]]));
+  $.chain(test)
+  ( $.sieve(x => isArrayLike(x))
+  , $.flatten(2)
+  , console.log
+  );
+  
+})();
+
+(function () {
+})();
+
+// Zip test
+(function () {
+  var test = [1,2,3,[4,5,[],[6,[7,[8],[[9]]]]]];
+  console.log($.chain(test)
+  ( $.sieve(x => isArrayLike(x))
+  , $.flatten(5)
+  , $.chunk(3)
+  , $.zip([1,2])
+  , $.flatten(3)
+  ));
+})();
+
 
 
 (function () {
   var test = [1,2,3,4,5,6,7,8,9,0];
   // map
-  console.log(_.map(x => x+ 1).apply(null, test));
+  console.log($.map(x => x+ 1).apply(null, test));
   console.log(test);
 
   // curry
@@ -53,6 +98,21 @@ const $ = require('../lazy');
     )
   );
   console.log(test);
+
+  // Chunk
+  $.chain($.range(0, 18))
+  ( $.chunk(3)
+  , console.log
+  )
+  $.chain($.range(0, 19))
+  ( $.chunk(3)
+  , console.log
+  )
+  $.chain($.range(0, 20))
+  ( $.chunk(3)
+  , console.log
+  )
+
 
   // Fold |> rebox and curryApply interaction
   console.log('rebox and curryApply', $.curryApply
@@ -97,4 +157,23 @@ const $ = require('../lazy');
   );
   console.log(test);
 
+  // seqUnmonad
+  console.log('seqUnmonad', Lazy(test)
+    .map(x => { console.log('map1', x); return x + 1; })
+    .sieve(x => { console.log('sieve2', x); return x % 2 === 0; })
+    .map(x => { console.log('map3', x); return x * 2; })
+    .seqUnmonad(Array.prototype.map, x => { console.log('map3', x); return x * 2; })
+  );
+  console.log(test);
+
+  // seqUnmonadWrap
+  console.log('seqUnmonadWrap', Lazy(test)
+    .map(x => { console.log('map1', x); return x + 1; })
+    .sieve(x => { console.log('sieve2', x); return x % 2 === 0; })
+    .map(x => { console.log('map3', x); return x * 2; })
+    .seqUnmonadWrap(Array.prototype.map, x => { console.log('map3', x); return x * 2; })
+    .foldLWrap(0, (acc, x) => acc + x)
+    .take(6) 
+  );
+  console.log(test);
 })();
