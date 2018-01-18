@@ -1,51 +1,207 @@
-function library(Utils, $) {
+// https://github.com/petkaantonov/bluebird/wiki/Optimization-killers
+
+function library(Utils) // Yay dependancy injection
+{
   var _isArrayLike = Utils.isArrayLike;
   var _pushN = Utils.pushArray;
+  var _baseFlatten = Utils.baseFlattenMin1;
+
   var _INFINITY = Utils.INFINITY;
-
-  function Lazy(input) {
-    // Declaring state
-    var funcQueue = [];
-    var value = _listWrap(input);
-
-    // Declaring methods
-    // Inherit from exiting functional methods
-    var prototype = _addMethods(Object.create(null), funcQueue);
-
-    // Some stuff for lazy evaluation and dot chaining
-    prototype.take = function (count) {
-      var fn = $.curry.apply(null, funcQueue);
-      funcQueue.length = 0; // Memory Safety: Kill it with fire
-
-      var result = [];
-      while (result.length < count && value.isNotDone()) {
-        _pushN(result, fn(value.next()), count); 
+  var _SKIP0TILL0 = Utils.inlineSlice(0, 0);
+  var _SKIP1TILL0 = Utils.inlineSlice(1, 0);
+  var _SKIP0TILL1 = Utils.inlineSlice(0, 1);
+  
+  var $ = {
+    // Unfolds
+    // -----------------------------------------
+    range: function (start, end, step) {
+      switch (arguments.length) {
+        case 1: end = start; start = 0;
+        case 2: step = 1;
+        case 3: break;
+        case 0: default: throw new SyntaxError('Expected 1-3 arguments.');
       }
-      value = prototype = null; // Memory Safety: Kill it with fire
-      return result;
-    };
+      var index = -1;
+      var len = Math.max(Math.ceil((end - start) / step), 0); // Excludes {end}
+      var output = new Array(len);
+      while (len--) {
+        output[++index] = start;
+        start += step;
+      }
+      return output;
+    },
 
-    prototype.takeWrap = function (count) {
-      return Lazy(prototype.take(count));
-    };
+    // Control flow
+    // -----------------------------------------
+    chain: function () {
+      var source = _SKIP0TILL0.apply(null, arguments);
 
-    prototype.takeAll = function () {
-      return prototype.take(_INFINITY);
-    };
+      return function () {
+        return $.curry.apply(null, arguments).apply(null, source);
+      };
+    },
 
-    prototype.takeAllWrap = prototype.seq = function () {
-      return takeWrap.takeWrap(_INFINITY);
-    };
+    curry: _curryCustom(function (fn, source) {
+      return _isArrayLike(source)
+        ? fn.apply(null, source)
+        : fn.call(null, source);
+    }),
 
-    // prototype.test = function () {
-    //   return value;
-    // }
+    curryApply: _curryCustom(function (fn, source) {
+      return fn.apply(null, source);
+    }),
 
-    return prototype;
-  }
+    curryCall: _curryCustom(function (fn, source) {
+      return fn.call(null, source);
+    }),
 
-  function _isArrayLike(toTest) {
-    return typeof toTest === 'object' && toTest.hasOwnProperty('length');
+    unmonad: function (fn) {
+      var args = _SKIP1TILL0.apply(null, arguments);
+      return function () {
+        var source = _SKIP0TILL0.apply(null, arguments);
+        return fn.apply(source, args);
+      };
+    },
+    rebox: function (fn) {
+      return function () {
+        return [fn.apply(null, arguments)]
+      };
+    }, 
+
+    // Core
+    // -----------------------------------------
+    map: function (fn) {
+      return function () {
+        var source = _SKIP0TILL0.apply(null, arguments);
+        var length = source.length;
+
+        var index = -1; while (++index < length) {
+          source[index] = fn(source[index]);
+        }
+        return source;
+      }
+    },
+    sieve: function (fn) {
+      return function () {
+        var length = arguments.length;
+
+        var result = [];
+        var resultIndex = -1;
+        var sourceIndex = -1; while (++sourceIndex < length) {
+          if (fn(arguments[sourceIndex])) {
+            result[++resultIndex] = arguments[sourceIndex];
+          }
+        }
+        return result;
+      }
+    },
+
+    foldL: function (seed, fn) {
+      return function () {
+        var length = arguments.length;
+        var accumulator = seed;
+        
+        var index = -1; while (++index < length) {
+          // console.log(index);
+          accumulator = fn(accumulator, arguments[index], index);
+        }
+        return [accumulator];
+      };
+    },
+
+    take: function (count) {
+      return function () {
+        var length = arguments.length;
+        var i = -1; while (++i < length) {
+          
+        }
+      };
+    },
+    takeLast: function () {
+    },
+    skip: function (startAt, stopBefore) {
+      return Utils.inlineSlice(first, till);
+    },
+
+    first: function () {
+      return function (i) { return i; };
+    },
+    last: function () {
+      return function () { return arguments[arguments.length - 1]; };
+    },
+
+    // strict currently useless, but bool for including empty arrays
+    flatten: function (depth, strict) {
+      return((typeof depth !== 'number' || depth < 1)
+        ? function () { return _SKIP0TILL0.apply(null, arguments); }
+        : function () { return _baseFlatten([], depth).apply(null, arguments); }
+      );
+    },
+
+    // Extra
+    // ES5 stuff is okay to have here
+    // -----------------------------------------
+    chunk: function (s) {
+      return function () {
+        var source = _SKIP0TILL0.apply(null, arguments);
+        var sourceLength = source.length;
+        var size = (typeof s !== 'number' || s <= 0) ? sourceLength : s;
+        var result = new Array(Math.ceil(sourceLength / size));
+
+
+        var resultIndex = -1;
+        var chunkIndex, chunk; // var calls in the main function namespace 
+
+        // Adds another row if don't start {sourceIndex} at 0 and post-increment
+        var sourceIndex = 0; while (sourceIndex < sourceLength) {
+          chunk = new Array(size);
+          chunkIndex = -1; while (++chunkIndex < size) {
+            chunk[chunkIndex] = source[sourceIndex++]; 
+          }
+          result[++resultIndex] = chunk;
+        }
+        return(result);
+      };
+    },
+
+    unique: function () {
+      return function () {
+        var source = _SKIP0TILL0.apply(null, arguments);
+
+        // Faster to use .has() than constructor of Set(), (ie. {Set(source)}) 
+        var temp = new Set();
+        var length = source.length;
+        var index = -1; while (++index < length) {
+          if (!temp.has(source[index])) {
+            temp.add(source[index]);
+          }
+        }
+        return Array.from(temp);
+      }
+    },
+
+    zip: function () {
+      var arrList = _SKIP0TILL0.apply(null, arguments);
+      var chainLength = arrList.length; 
+
+      return function () {
+        var source = _SKIP0TILL0.apply(null, arguments);
+        var length = source.length;
+        
+        var temp, i, j;
+        var innerLength = chainLength + 1;
+        var result = new Array(length);
+        i = -1; while (++i < length) {
+          temp = new Array(chainLength);
+          temp[0] = source[i];
+          j = 0; while (++j < innerLength) {
+            temp[j] = arrList[j - 1][i]; // {temp} offset by 1 cause of {source}
+          }
+          result[i] = temp;
+        };
+        return result;
+      };
+    },
   }
 
   function _curryCustom(custom) {
@@ -64,69 +220,7 @@ function library(Utils, $) {
     };
   }
 
-  function _listWrap(input) {
-    var source = _isArrayLike(input) // always array
-      ? input
-      : ((input === void 0) ? [] : [input]); // [null] can still go through
-    var index = 0;
-
-    var obj = Object.create(null);
-    obj.isNotDone = function () {
-      return index < source.length;
-    };
-    obj.next = function () {
-      return obj.isNotDone ? source[index++]: null;
-    }
-    return obj;
-  }
-
-  /**
-   * @todo unit tests for _addMethods, Lazy name changes don't hurt anything 
-   * @todo test for name conflicts after _addMethods perhaps?
-   * @todo throughly test _pushN and _arrayWrap cases for when singleton
-   * vs list are needed, perhaps opportunity for optimisation?
-   * - immediately after foldL, need singleton check for _pushN
-   */
-  /**
-   * To convert all the methods from composition to dot-chainable
-   */
-  var _addMethods = (function () {
-    var strictGraph = ['foldL'];
-
-    var lazys = ['map', 'sieve', 'unmonad'];
-    var stricts = {
-      'unmonad': 'seqUnmonad',
-    };
-    strictGraph.forEach(function (entry) { stricts[entry] = entry; });
-
-    return function (prototype, funcQueue) {
-      lazys.forEach(function (name) {
-        prototype[name] = function () {
-          funcQueue[funcQueue.length] = $[name].apply(null, arguments);
-          return prototype;
-        };
-      });
-
-      // For the functors that need the entire array evaluated before continuing
-      Object.keys(stricts).forEach(function (name) {
-        prototype[stricts[name]] = function () {
-          var result = prototype.takeAll();
-          return $[name].apply(null, arguments).apply(null, result);
-        };
-
-        // Include method if want to wrap for continued dot-chaining
-        prototype[stricts[name] + 'Wrap'] = function () {
-          var a = prototype[stricts[name]].apply(null, arguments);
-          return Lazy(a);
-        };
-      });
-
-      return prototype;
-    };
-
-  })();
-
-  return Lazy;
-}
+  return $;
+};
 
 module.exports = library;

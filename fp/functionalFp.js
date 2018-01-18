@@ -83,32 +83,64 @@ function library(Utils) // Yay dependancy injection
     },
     sieve: function (fn) {
       return function () {
-        var source = _SKIP0TILL0.apply(null, arguments);
-        var length = source.length;
+        var length = arguments.length;
 
         var result = [];
         var resultIndex = -1;
         var sourceIndex = -1; while (++sourceIndex < length) {
-          if (fn(source[sourceIndex])) {
-            result[++resultIndex] = source[sourceIndex];
+          if (fn(arguments[sourceIndex])) {
+            result[++resultIndex] = arguments[sourceIndex];
           }
         }
-        return(result);
+        return result;
       }
     },
 
     foldL: function (seed, fn) {
       return function () {
-        var source = _SKIP0TILL0.apply(null, arguments);
-        var length = source.length;
+        var length = arguments.length;
         var accumulator = seed;
         
         var index = -1; while (++index < length) {
           // console.log(index);
-          accumulator = fn(accumulator, source[index], index);
+          accumulator = fn(accumulator, arguments[index], index);
         }
-        return(accumulator);
+        return [accumulator];
       };
+    },
+
+    take: function (count) {
+      return function () {
+        var length = arguments.length;
+        var limit = Math.min(count, length);
+        var result = new Array(limit);
+        var i = -1; while (i < limit) {
+          result[i] = argument[i];
+          ++i;
+        }
+        return result;
+      };
+    },
+    takeLast: function (count) {
+      return function () {
+        var length = arguments.length;
+        var resultIndex = -1;
+        var result = new Array(Math.min(count, length));
+        var i = Math.max(length - count, -1); while (++i < length) {
+          result[++resultIndex] = argument[i];
+        }
+        return result;
+      };
+    },
+    skip: function (startAt, stopBefore) {
+      return Utils.inlineSlice(first, till);
+    },
+
+    first: function () {
+      return function (i) { return i; };
+    },
+    last: function () {
+      return function () { return arguments[arguments.length - 1]; };
     },
 
     // strict currently useless, but bool for including empty arrays
