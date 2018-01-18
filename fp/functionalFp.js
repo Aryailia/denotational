@@ -42,12 +42,6 @@ function library(Utils) // Yay dependancy injection
     },
 
     curry: _curryCustom(function (fn, source) {
-      return _isArrayLike(source)
-        ? fn.apply(null, source)
-        : fn.call(null, source);
-    }),
-
-    curryApply: _curryCustom(function (fn, source) {
       return fn.apply(null, source);
     }),
 
@@ -103,7 +97,6 @@ function library(Utils) // Yay dependancy injection
         var accumulator = seed;
         
         var index = -1; while (++index < length) {
-          // console.log(index);
           accumulator = fn(accumulator, arguments[index], index);
         }
         return [accumulator];
