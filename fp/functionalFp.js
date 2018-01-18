@@ -72,6 +72,7 @@ function library(Utils) // Yay dependancy injection
     // -----------------------------------------
     map: function (fn) {
       return function () {
+        // Because inlineSplice makes a new array, can resuse it
         var source = _SKIP0TILL0.apply(null, arguments);
         var length = source.length;
 

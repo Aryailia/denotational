@@ -15,30 +15,10 @@
 
 const {Suite} = require('benchmark');
 const {_} = require('../../fp');
+const {shuffle} = require('./RnDUtils');
 
 var large = shuffle(_.range(0,1000).map((x, i) => i));
 var small = shuffle(_.range(0,30).map((x, i) => i));
-
-// Including shuffle to help block any random optimisitations that
-// node engine might be doing, just a Knuth shuffle
-// Source: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
-function shuffle(array) {
-  var currentIndex = array.length, temporaryValue, randomIndex;
-
-  // While there remain elements to shuffle...
-  while (0 !== currentIndex) {
-
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
-
-    // And swap it with the current element.
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-  return array;
-}
 
 // Almost idetical format to how it's implemented currently
 var $ = {
@@ -86,23 +66,6 @@ var $ = {
     };
   },
 }
-
-// $.flow($.map(x => x + 1)
-// , $.sieve(x => x % 2 === 0)
-// , $.map(x => x * x)
-// , $.sieve(x => x % 2 === 0)
-// , $.map(x => x / 4)
-// , $.sieve(x => x % 2 === 1)
-// , console.log
-// )(test);
-
-// _.curry($.map(x => x + 1)
-// , _.sieve(x => x % 2 === 0)
-// , _.map(x => x * x)
-// , _.sieve(x => x % 2 === 0)
-// , _.map(x => x / 4)
-// , _.sieve(x => x % 2 === 1)
-// )(test);
 
 var a = $.flow
   ( $.map(x => x + 1)
