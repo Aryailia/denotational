@@ -19,7 +19,7 @@ function library($) // Yay dependancy injection
       };
     });
 
-    prototype.seq = function () {
+    prototype.val = function () {
       var fn = $.curry.apply(null, funcQueue);
       funcQueue.length = 0;
       return fn(input);
@@ -37,7 +37,7 @@ function library($) // Yay dependancy injection
 //   .map(x => x + 1)
 //   .sieve(x => x % 2 == 0)
 //   .foldL(0, (acc,x) => acc+x)
-//   .seq()
+//   .val()
 // );
 
 module.exports = library;
