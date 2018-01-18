@@ -13,6 +13,8 @@
 // such a large difference. The difference feels too big for that to be the only
 // reason
 
+'use strict';
+
 const {Suite} = require('benchmark');
 const {_} = require('../../fp');
 const {shuffle} = require('./RnDUtils');

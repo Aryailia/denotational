@@ -18,8 +18,8 @@ var toExport = {
   },
 
   pushArray: function (result, input, targetLength) {
-    var source = toExport.isArrayLike(input) ? input : [input];
-    // var source = input;
+    // var source = toExport.isArrayLike(input) ? input : [input];
+    var source = input;
     var sourceLength = source.length;
   
     var i = -1; while (++i < sourceLength && result.length < targetLength) {

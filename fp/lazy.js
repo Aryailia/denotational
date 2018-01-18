@@ -32,15 +32,15 @@ function library(Utils, $) {
     };
 
     prototype.test = function (count) {
-      var fn = $.curry.apply(null, funcQueue);
+      var fn = $.curryCall.apply(null, funcQueue);
       funcQueue.length = 0; // Memory Safety: Kill it with fire
 
       var v;
       var result = [];
       while (result.length < count && value.isNotDone()) {
         v = fn(value.next());
-        console.log(v);
-        _pushN(result, [v], count); 
+        console.log('intermediate', v);
+        _pushN(result, v, count); 
       }
       value = prototype = null; // Memory Safety: Kill it with fire
       return result;
