@@ -7,7 +7,7 @@ function library($) // Yay dependancy injection
 
     var prototype = Object.create(null);
 
-    var toNotAdd = { range: 0, curry: 0, curryCall: 0 };
+    var toNotAdd = { range: 0, curry: 0 };
     var toAdd = Object.keys($).filter(function (name) {
       return toNotAdd.hasOwnProperty(name) === false;
     });
@@ -22,7 +22,7 @@ function library($) // Yay dependancy injection
     prototype.val = function () {
       var fn = $.curry.apply(null, funcQueue);
       funcQueue.length = 0;
-      return fn(input);
+      return fn.apply(null, input);
     };
 
     return prototype;

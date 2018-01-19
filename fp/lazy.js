@@ -1,131 +1,112 @@
-function library(Utils, $) {
-  var _isArrayLike = Utils.isArrayLike;
-  var _pushN = Utils.pushArray;
+function library($, Utils) // Yay dependancy injection
+{
+  'use strict';
+  var _SKIP0TILL0 = Utils.inlineSlice(0, 0);
   var _INFINITY = Utils.INFINITY;
-  var _SKIP1TILL0 = Utils.inlineSlice(1, 0);
 
   function Lazy(input) {
-    // Declaring state
+    var value = input;
     var funcQueue = [];
-    var value = _listWrap(input);
 
-    // Declaring methods
-    // Inherit from exiting functional methods
-    var prototype = _addMethods(Object.create(null), funcQueue);
+    var prototype = Object.create(null);
 
-    // Some stuff for lazy evaluation and dot chaining
-    prototype.take = function (count) {
-      var fn = $.curryCall.apply(null, funcQueue);
-      funcQueue.length = 0; // Memory Safety: Kill it with fire
-
-      var result = [];
-      while (result.length < count && value.isNotDone()) {
-        _pushN(result, fn(value.next()), count); 
-      }
-      value = prototype = null; // Memory Safety: Kill it with fire
-      return result;
-    };
-
-    prototype.annex = function (fn) {
-      funcQueue[funcQueue.length] = function () {
+    var lazies = ['map', 'sieve', 'flatten'];
+    var forced = ['foldL', 'chunk'];
+    lazies.forEach(function (name) {
+      prototype[name] = function () {
+        funcQueue[funcQueue.length] = $[name].apply(null, arguments);
+        return prototype;
       };
-    };
+    });
+    forced.forEach(function (name) {
+      prototype[name] = function () {
+        var result = prototype.take(_INFINITY);
+        return Lazy($[name].apply(null, arguments).apply(null, result));
+      };
+    });
 
-    prototype.test = function (count) {
+    function memoizedRun() {
+      var cache = [];
+      var cacheIndex = 0;
+      var source = _SKIP0TILL0.apply(null, arguments);
+      var index = 0;
+      var sourceLength = source.length;
+
+      var obj = Object.create(null);
+
+      obj.isNotDone = function () {
+        return index < sourceLength;
+      };
+
+      obj.next = function (chunkSize, fn) {
+        if (obj.isNotDone()) { 
+          var temp = new Array(chunkSize);
+
+          // Memoize as much as need until enough for a single chunk
+          var cacheStart = cache.length;
+          while (obj.isNotDone() && cache.length - cacheStart  < chunkSize) {
+            cache.push.apply(cache, fn(source[index]));
+            ++index;
+          }
+
+          var cacheLength = cache.length;
+          var j = -1; while (++j < chunkSize && cacheIndex < cacheLength) {
+            temp[j] = cache[cacheIndex++];
+          }
+          return temp;
+        } else {
+          return void 0;
+        }
+      };
+      obj.getCache = function () {
+        return cache;
+      };
+      return obj;
+    }
+
+    [
+      'chunk'
+    ].forEach(function (name) {
+      prototype[name] = function (num) {
+        var fn = $.curry.apply(null, funcQueue);
+        funcQueue.length = 0;
+
+        var memoize = memoizedRun.apply(null, value);
+        var curFn = $[name](num);
+        funcQueue[0] = function () { // At this point, it's using value instead of arguments
+          var v = memoize.next(num, fn);
+          console.log('I am running', v);
+          return curFn.apply(null, v);
+        };
+        return prototype;
+      };
+    });
+
+    prototype.take = function (count) {
       var fn = $.curry.apply(null, funcQueue);
-      funcQueue.length = 0; // Memory Safety: Kill it with fire
+      funcQueue.length = 0;
 
-      var v;
+      var limit = Math.min(value.length, count);
       var result = [];
-      while (result.length < count && value.isNotDone()) {
-        v = fn.apply(null, [value.next()]);
-        // console.log('intermediate', v);
-        _pushN(result, [v], count); 
+      var i = -1; while (++i < limit && result.length < count) {
+        Utils.pushArray(result, fn(value[i]), count); 
       }
-      value = prototype = null; // Memory Safety: Kill it with fire
       return result;
     };
-
-    prototype.takeWrap = function (count) {
-      return Lazy(prototype.take(count));
-    };
-
-    prototype.takeAll = function () {
-      return prototype.take(_INFINITY);
-    };
-
-    prototype.takeAllWrap = prototype.seq = function () {
-      return takeWrap.takeWrap(_INFINITY);
-    };
-
-    // prototype.test = function () {
-    //   return value;
-    // }
 
     return prototype;
   }
 
-  function _listWrap(input) {
-    var source = _isArrayLike(input) // {source} will always array
-      ? input
-      : ((input === void 0) ? [] : [input]); // null can still go through
-    var index = 0;
-
-    var obj = Object.create(null);
-    obj.isNotDone = function () {
-      return index < source.length;
-    };
-    obj.next = function () {
-      return obj.isNotDone ? source[index++]: null;
-    }
-    return obj;
-  }
-
-  /**
-   * @todo unit tests for _addMethods, Lazy name changes don't hurt anything 
-   * @todo test for name conflicts after _addMethods perhaps?
-   * @todo throughly test _pushN and _arrayWrap cases for when singleton
-   * vs list are needed, perhaps opportunity for optimisation?
-   * - immediately after foldL, need singleton check for _pushN
-   */
-  /**
-   * To convert all the methods from composition to dot-chainable
-   */
-  var _addMethods = (function () {
-    var lazys = ['map', 'sieve', 'unmonad'];
-    var strictGraph = ['foldL', 'chunk'];
-    var stricts = {
-      'unmonad': 'seqUnmonad',
-    };
-    strictGraph.forEach(function (entry) { stricts[entry] = entry; });
-
-    return function (prototype, funcQueue) {
-      lazys.forEach(function (name) {
-        prototype[name] = function () {
-          funcQueue[funcQueue.length] = $[name].apply(null, arguments);
-          return prototype;
-        };
-      });
-
-      // For the functors that need the entire array evaluated before continuing
-      Object.keys(stricts).forEach(function (name) {
-        prototype[stricts[name]] = function () {
-          var result = prototype.takeAll();
-          return $[name].apply(null, arguments).apply(null, result);
-        };
-
-        // Include method if want to wrap for continued dot-chaining
-        prototype[stricts[name] + 'Wrap'] = function () {
-          return Lazy(prototype[stricts[name]].apply(null, arguments));
-        };
-      });
-
-      return prototype;
-    };
-
-  })();
-
   return Lazy;
 }
+
+// var _ = require('./functionalFp')(require('./utils'));
+// var Strict = library(_);
+// console.log(Strict(_.range(0,10))
+//   .map(x => x + 1)
+//   .sieve(x => x % 2 == 0)
+//   .foldL(0, (acc,x) => acc+x)
+//   .val()
+// );
 
 module.exports = library;
