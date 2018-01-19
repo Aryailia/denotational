@@ -209,6 +209,20 @@ function library(Utils) // Yay dependancy injection
         return result;
       };
     },
+
+    _special: function () {
+      var fList = _SKIP0TILL0.apply(null, arguments);
+      return function () {
+        var source = _SKIP0TILL0.apply(null, arguments);
+        var length = fList.length;
+        var queue = fList;
+
+        var index = -1; while (++index < length) { // func + arg pairs
+          source = queue[index].apply(null, source);
+        }
+        return source;
+      };
+    }
   }
 
   function _curryCustom(custom) {

@@ -7,7 +7,7 @@ function library($) // Yay dependancy injection
 
     var prototype = Object.create(null);
 
-    var toNotAdd = { 'range': 1, };
+    var toNotAdd = { range: 0, curry: 0, curryCall: 0 };
     var toAdd = Object.keys($).filter(function (name) {
       return toNotAdd.hasOwnProperty(name) === false;
     });
