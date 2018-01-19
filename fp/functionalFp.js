@@ -2,17 +2,13 @@
 
 function library(Utils) // Yay dependancy injection
 {
-  var _isArrayLike = Utils.isArrayLike;
-  var _pushN = Utils.pushArray;
   var _baseFlatten = Utils.baseFlattenMin1;
 
-  var _INFINITY = Utils.INFINITY;
   var _SKIP0TILL0 = Utils.inlineSlice(0, 0);
   var _SKIP1TILL0 = Utils.inlineSlice(1, 0);
-  var _SKIP0TILL1 = Utils.inlineSlice(0, 1);
   
   var $ = {
-    // Unfolds
+    // Unfolds and utilities
     // -----------------------------------------
     range: function (start, end, step) {
       switch (arguments.length) {
@@ -33,21 +29,25 @@ function library(Utils) // Yay dependancy injection
 
     // Control flow
     // -----------------------------------------
-    chain: function () {
-      var source = _SKIP0TILL0.apply(null, arguments);
-
+    chain: function (source) {
       return function () {
         return $.curry.apply(null, arguments).apply(null, source);
       };
     },
 
-    curry: _curryCustom(function (fn, source) {
-      return fn.apply(null, source);
-    }),
+    curry: function () {
+      var fList = _SKIP0TILL0.apply(null, arguments);
+      return function () {
+        var source = _SKIP0TILL0.apply(null, arguments);
+        var length = fList.length;
+        var queue = fList;
 
-    curryCall: _curryCustom(function (fn, source) {
-      return fn.call(null, source);
-    }),
+        var index = -1; while (++index < length) { // func + arg pairs
+          source = queue[index].apply(null, source);
+        }
+        return source;
+      };
+    },
 
     unmonad: function (fn) {
       var args = _SKIP1TILL0.apply(null, arguments);
@@ -74,7 +74,7 @@ function library(Utils) // Yay dependancy injection
           source[index] = fn(source[index]);
         }
         return source;
-      }
+      };
     },
     sieve: function (fn) {
       return function () {
@@ -88,7 +88,7 @@ function library(Utils) // Yay dependancy injection
           }
         }
         return result;
-      }
+      };
     },
 
     foldL: function (seed, fn) {
@@ -126,14 +126,7 @@ function library(Utils) // Yay dependancy injection
       };
     },
     skip: function (startAt, stopBefore) {
-      return Utils.inlineSlice(first, till);
-    },
-
-    first: function () {
-      return function (i) { return i; };
-    },
-    last: function () {
-      return function () { return arguments[arguments.length - 1]; };
+      return Utils.inlineSlice(startAt, stopBefore);
     },
 
     // strict currently useless, but bool for including empty arrays
@@ -183,9 +176,10 @@ function library(Utils) // Yay dependancy injection
           }
         }
         return Array.from(temp);
-      }
+      };
     },
 
+    /** @todo review how I want to do zip */
     zip: function () {
       var arrList = _SKIP0TILL0.apply(null, arguments);
       var chainLength = arrList.length; 
@@ -204,43 +198,13 @@ function library(Utils) // Yay dependancy injection
             temp[j] = arrList[j - 1][i]; // {temp} offset by 1 cause of {source}
           }
           result[i] = temp;
-        };
+        }
         return result;
       };
     },
-
-    _special: function () {
-      var fList = _SKIP0TILL0.apply(null, arguments);
-      return function () {
-        var source = _SKIP0TILL0.apply(null, arguments);
-        var length = fList.length;
-        var queue = fList;
-
-        var index = -1; while (++index < length) { // func + arg pairs
-          source = queue[index].apply(null, source);
-        }
-        return source;
-      };
-    }
-  }
-
-  function _curryCustom(custom) {
-    return function () {
-      var fList = _SKIP0TILL0.apply(null, arguments);
-      return function (source) {
-        var length = fList.length;
-        var queue = fList;
-
-        var result = source;
-        var index = -1; while (++index < length) { // func + arg pairs
-          result = custom(queue[index], result);
-        }
-        return result;
-      };
-    };
-  }
+  };
 
   return $;
-};
+}
 
 module.exports = library;

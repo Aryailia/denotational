@@ -2,7 +2,6 @@ const {test} = require('tape');
 const Utils = require('../fp/utils');
 const $ = require('../fp/functionalFp')(Utils);
 const {baseFlattenMin1, isArrayLike, pushArray, inlineSlice} = Utils;
-const Lazy = require('../fp/lazy')(Utils, $);
 
 test('Does the library even work? Map test', t => {
   var static = [1,2,3,4,5,6,7,8,9,0];
@@ -22,13 +21,13 @@ test('Unfolds (Import from Compose)', t => {
 test('Utilities - .inlineSlice(skip from start, skip from the end)', t => {
   var test = [1,2,3,4,5,6,7,8,9,0];
   var args;
-  args = [0,0]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [1,2,3,4,5,6,7,8,9,0], `_inlineSlice(${args.join(',')})`);
-  args = [0,1]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [1,2,3,4,5,6,7,8,9], `_inlineSlice(${args.join(',')})`);
-  args = [1,0]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [2,3,4,5,6,7,8,9,0], `_inlineSlice(${args.join(',')})`);
-  args = [1,1]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [2,3,4,5,6,7,8,9], `_inlineSlice(${args.join(',')})`);
-  args = [0,3]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [1,2,3,4,5,6,7], `_inlineSlice(${args.join(',')})`);
-  args = [3,1]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [4,5,6,7,8,9], `_inlineSlice(${args.join(',')})`);
-  args = [3,4]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [4,5,6], `_inlineSlice(${args.join(',')})`);
+  args = [0,0]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [1,2,3,4,5,6,7,8,9,0], `inlineSlice(${args.join(',')})`);
+  args = [0,1]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [1,2,3,4,5,6,7,8,9], `inlineSlice(${args.join(',')})`);
+  args = [1,0]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [2,3,4,5,6,7,8,9,0], `inlineSlice(${args.join(',')})`);
+  args = [1,1]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [2,3,4,5,6,7,8,9], `inlineSlice(${args.join(',')})`);
+  args = [0,3]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [1,2,3,4,5,6,7], `inlineSlice(${args.join(',')})`);
+  args = [3,1]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [4,5,6,7,8,9], `inlineSlice(${args.join(',')})`);
+  args = [3,4]; t.deepEqual(inlineSlice.apply(null, args).apply(null, test), [4,5,6], `inlineSlice(${args.join(',')})`);
 
   t.deepEqual(test, [1,2,3,4,5,6,7,8,9,0], 'immutability check');
   t.comment(''); t.comment(''); t.comment('');
@@ -42,7 +41,7 @@ test('FFP.curry and FFP.chain', t => {
   var oneArgs = source => $.curry($.map(x => x + 1)).apply(null, source);
   var twoArgs = source => $.curry($.map(x => x + 1), $.map(x => x * 2)).apply(null, source);
   var threeArgs = source => $.curry($.map(x => x + 1), $.map(x => x * 2), $.map(x => x - 1)).apply(null, source);
-  // t.deepEqual($.curry().apply(null, test), static, 'curry zero arguments');
+  t.deepEqual($.curry().apply(null, test), static, 'curry zero arguments');
   t.deepEqual(oneArgs(test), [2,3,4,5,6,7,8,9,10,1], 'curry(one) - of array');
   t.deepEqual(twoArgs(test), [4,6,8,10,12,14,16,18,20,2], 'curry(first, second) - of array');
   t.deepEqual(threeArgs(test), [3,5,7,9,11,13,15,17,19,1], 'curry(first, second, third) - of array');
@@ -52,38 +51,15 @@ test('FFP.curry and FFP.chain', t => {
   t.deepEqual(twoArgs(test), [4,6,8,10,12,14,16,18,20,2], 'again: curry(first, second) - of array');
   t.deepEqual(threeArgs(test), [3,5,7,9,11,13,15,17,19,1], 'again: curry(first, second, third) - of array');
 
-  t.comment('currying a number');
-  t.deepEqual($.curry()(1), 1, 'curry zero arguments');
-  t.deepEqual(oneArgs(1), [2], 'curry(one) - of number');
-  t.deepEqual(twoArgs(1), [4], 'curry(first, second) - of number');
-  t.deepEqual(threeArgs(1), [3], 'curry(first, second, third) - of number');
-
-  t.comment('currying a number - should not be different from previous');
-  t.deepEqual(oneArgs(1), [2], 'again: curry(one) - of number');
-  t.deepEqual(twoArgs(1), [4], 'again: curry(first, second) - of number');
-  t.deepEqual(threeArgs(1), [3], 'again: curry(first, second, third) - of number');
-
-
   t.comment('FFP.chain');
   t.deepEqual(
-    ($.chain(test)
-      ( $.map(x => x + 1)
-      , $.sieve(x => x % 2 === 1)
-      , $.map(x => x * x)
-      )
+    $.chain(test)(
+      $.map(x => x + 1)
+      ,$.sieve(x => x % 2 === 1)
+      ,$.map(x => x * x)
     ),
     [9,25,49,81 ,1], 'on an array'
   );
-  t.deepEqual(
-    ($.chain(1)
-      ( $.map(x => x + 1)
-      , $.map(x => x * 2)
-      , $.map(x => x * x)
-      )
-    ),
-    [16], 'on a number'
-  );
-
 
   t.deepEqual(test, static, 'immutability test');
   t.comment(''); t.comment(''); t.comment('');
@@ -139,42 +115,38 @@ test('Chainability of FFP.flatten', t => {
   );
 
   t.deepEqual(
-    ($.chain(test)
-      ( $.sieve(x => isArrayLike(x))
-      , $.flatten(2)
-      )
+    $.chain(test)(
+      $.sieve(x => isArrayLike(x))
+      ,$.flatten(2)
     ),
     [4,5,6,[7,[8],[[9]]]],
     'before'
   );
 
   t.deepEqual(
-    ($.chain(test)
-      ( $.sieve(x => isArrayLike(x))
-      , $.flatten(5)
-      , $.chunk(3)
-      )
+    $.chain(test)(
+      $.sieve(x => isArrayLike(x))
+      ,$.flatten(5)
+      ,$.chunk(3)
     ),
     [[4,5,6], [7,8,9]],
     'inbetween'
   );
   t.deepEqual(
-    ($.chain(test)
-      ( $.flatten(1)
-      , $.map(x => [x])
-      )
+    $.chain(test)(
+      $.flatten(1)
+      ,$.map(x => [x])
     ),
     [[1],[2],[3],[4],[5],[[]],[[6,[7,[8],[[9]]]]]],
     'after'
   );
 
   t.deepEqual(
-    ($.chain(test)
-      ( $.sieve(x => isArrayLike(x))
-      , $.flatten(2)
-      , $.flatten(3)
-      , $.chunk(3)
-      )
+    $.chain(test)(
+      $.sieve(x => isArrayLike(x))
+      ,$.flatten(2)
+      ,$.flatten(3)
+      ,$.chunk(3)
     ),
     [[4,5,6], [7,8,9]],
     'double'
