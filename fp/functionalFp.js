@@ -108,9 +108,8 @@ function library(Utils) // Yay dependancy injection
         var length = arguments.length;
         var limit = Math.min(count, length);
         var result = new Array(limit);
-        var i = -1; while (i < limit) {
-          result[i] = argument[i];
-          ++i;
+        var i = -1; while (++i < limit) {
+          result[i] = arguments[i];
         }
         return result;
       };
@@ -120,8 +119,8 @@ function library(Utils) // Yay dependancy injection
         var length = arguments.length;
         var resultIndex = -1;
         var result = new Array(Math.min(count, length));
-        var i = Math.max(length - count, -1); while (++i < length) {
-          result[++resultIndex] = argument[i];
+        var i = Math.max(length - count, -1); while (i < length) {
+          result[++resultIndex] = arguments[i++];
         }
         return result;
       };

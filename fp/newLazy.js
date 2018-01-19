@@ -79,10 +79,12 @@ function library($, Utils) // Yay dependancy injection
             var temp = new Array(chunkSize);
             
             var i = -1; while (++i < sourceLength && cache.length - index  < chunkSize ) {
+              console.log('inside', i, source[i], fn.apply(null, source[i]));
               Utils.pushArray(cache, fn.apply(null, source[i]), INFIN);
             }
-            var j = -1; while (++j < chunkSize && index + j  < cache.length) {
-              console.log('memoize', index + j, cache.length);
+            var cacheLength = cache.length;
+            var j = -1; while (++j < chunkSize && index + j  < cacheLength) {
+              // console.log('memoize', index + j, cache.length);
               temp[j] = cache[index + j];
             }
             index += chunkSize;
@@ -106,10 +108,12 @@ function library($, Utils) // Yay dependancy injection
 
     var INFIN = 1/0;
     [
-      // 'chunk'
+      'chunk'
     ].forEach(function (name) {
       prototype[name] = function (num) {
         var fn = $._special.apply(null, funcQueue);
+        // var test = [[1,2,3,4]];
+        // console.log('test', $._special.apply(null, funcQueue).apply(null, value))
         funcQueue.length = 0;
 
         var memoize = memoizedRun(value, num);
