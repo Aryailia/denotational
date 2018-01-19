@@ -56,11 +56,6 @@ function library(Utils) // Yay dependancy injection
         return fn.apply(source, args);
       };
     },
-    rebox: function (fn) {
-      return function () {
-        return [fn.apply(null, arguments)]
-      };
-    }, 
 
     // Core
     // -----------------------------------------
@@ -138,8 +133,19 @@ function library(Utils) // Yay dependancy injection
     },
 
     // Extra
-    // ES5 stuff is okay to have here
     // -----------------------------------------
+    each: function (fn) {
+      return function () {
+        var source = _SKIP0TILL0.apply(null, arguments);
+        var length = source.length;
+
+        var index = -1; while (++index < length) {
+          fn(source[index]);
+        }
+        return source;
+      };
+    },
+
     chunk: function (s) {
       return function () {
         var source = _SKIP0TILL0.apply(null, arguments);

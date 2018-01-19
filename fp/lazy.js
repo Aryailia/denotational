@@ -10,8 +10,8 @@ function library($, Utils) // Yay dependancy injection
 
     var prototype = Object.create(null);
 
-    var lazies = ['map', 'sieve', 'flatten'];
-    var forced = ['foldL', 'chunk'];
+    var lazies = ['map', 'sieve', 'flatten', 'each'];
+    var forced = ['foldL', 'chunk', 'unique'];
     lazies.forEach(function (name) {
       prototype[name] = function () {
         funcQueue[funcQueue.length] = $[name].apply(null, arguments);
