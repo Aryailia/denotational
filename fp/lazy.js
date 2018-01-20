@@ -11,13 +11,16 @@ function library($, Utils) // Yay dependancy injection
     var prototype = Object.create(null);
 
     var lazies = ['map', 'sieve', 'flatten', 'each'];
-    var forced = ['foldL', 'chunk', 'unique'];
+    var forced = ['foldL', 'unique']; // Chunk goes here if memoizes not working
+    // These can be run on individual elements as is done with .take()
     lazies.forEach(function (name) {
       prototype[name] = function () {
         funcQueue[funcQueue.length] = $[name].apply(null, arguments);
         return prototype;
       };
     });
+
+    // These reference the entire array and need it to be evaluated first
     forced.forEach(function (name) {
       prototype[name] = function () {
         var result = prototype.take(_INFINITY);
@@ -25,45 +28,7 @@ function library($, Utils) // Yay dependancy injection
       };
     });
 
-    function memoizedRun() {
-      var cache = [];
-      var cacheIndex = 0;
-      var source = _SKIP0TILL0.apply(null, arguments);
-      var index = 0;
-      var sourceLength = source.length;
-
-      var obj = Object.create(null);
-
-      obj.isNotDone = function () {
-        return index < sourceLength;
-      };
-
-      obj.next = function (chunkSize, fn) {
-        if (obj.isNotDone()) { 
-          var temp = new Array(chunkSize);
-
-          // Memoize as much as need until enough for a single chunk
-          var cacheStart = cache.length;
-          while (obj.isNotDone() && cache.length - cacheStart  < chunkSize) {
-            cache.push.apply(cache, fn(source[index]));
-            ++index;
-          }
-
-          var cacheLength = cache.length;
-          var j = -1; while (++j < chunkSize && cacheIndex < cacheLength) {
-            temp[j] = cache[cacheIndex++];
-          }
-          return temp;
-        } else {
-          return void 0;
-        }
-      };
-      obj.getCache = function () {
-        return cache;
-      };
-      return obj;
-    }
-
+    // The ones that operate in piecemeal, have to memoize
     [
       'chunk'
     ].forEach(function (name) {
@@ -95,6 +60,62 @@ function library($, Utils) // Yay dependancy injection
     };
 
     return prototype;
+  }
+
+
+  // Creates an intermediate cache and pushes values into that so that slices
+  // can be then extracted from that cache. (In other words memoizing)
+  //
+  // Need to test that intermediate {source} is not causing problems in
+  // longer chained function queues
+  //
+  // Consider implementing a proper memoize function
+  //
+  // May want to consider reimplementing .take() with this, should not be hard
+  //
+  // Might be possible to get rid of all special cases and just have a functions
+  // use the memoize run of .take()
+  // Useful to also consider returning the cache as the final answer
+  function memoizedRun() {
+    var source = _SKIP0TILL0.apply(null, arguments);
+    var sourceLength = source.length;
+
+    // State, private variables
+    var cache = [];
+    var cacheIndex = 0;
+    var index = 0;
+
+    // Method definitions
+    var obj = Object.create(null);
+
+    obj.isNotDone = function () {
+      return index < sourceLength;
+    };
+
+    obj.next = function (chunkSize, fn) {
+      if (obj.isNotDone()) { 
+        var temp = new Array(chunkSize);
+
+        // Memoize as much as need until enough for a single chunk
+        var cacheStart = cache.length;
+        while (obj.isNotDone() && cache.length - cacheStart  < chunkSize) {
+          cache.push.apply(cache, fn(source[index]));
+          ++index;
+        }
+
+        var cacheLength = cache.length;
+        var j = -1; while (++j < chunkSize && cacheIndex < cacheLength) {
+          temp[j] = cache[cacheIndex++];
+        }
+        return temp;
+      } else {
+        return void 0;
+      }
+    };
+    // obj.getCache = function () {
+    //   return cache;
+    // };
+    return obj;
   }
 
   return Lazy;
