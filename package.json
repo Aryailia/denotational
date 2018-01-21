@@ -1,8 +1,8 @@
 {
-  "name": "bothelper",
-  "version": "1.0.0",
-  "description": "A small library for simulating the Discord.js npm module for creating bots for Discord. Imitates a server via the command line (via stdin and console.log). Intended to be a drop-in replacement for Discord.js though it has very limited functionality at the moment.",
-  "main": "botwrapper.js",
+  "name": "TBD",
+  "version": "0.1.0",
+  "description": "",
+  "main": "fp.js",
   "directories": {
     "test": "test"
   },
@@ -17,12 +17,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Aryailia/Discord-Bot-Development.git"
+    "url": "git+https://github.com/Aryailia/pipe.git"
   },
   "author": "Aryailia",
-  "license": "GPL-3.0",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Aryailia/Discord-Bot-Development/issues"
+    "url": "https://github.com/Aryailia/pipe/issues"
   },
-  "homepage": "https://github.com/Aryailia/Discord-Bot-Development#readme"
+  "homepage": "https://github.com/Aryailia/pipe#readme"
 }
