@@ -1,19 +1,19 @@
 const {test} = require('tape');
-const Utils = require('../fp/utils');
-const $ = require('../fp/functionalFp')(Utils);
+const Utils = require('../src/utils');
+const {_} = require('../index');
 const {baseFlattenMin1, isArrayLike, pushArray, inlineSlice} = Utils;
 
 test('Does the library even work? Map test', t => {
   var static = [1,2,3,4,5,6,7,8,9,0];
   var test   = [1,2,3,4,5,6,7,8,9,0];
-  t.deepEqual($.map(x => x * 2).apply(null, test), [2,4,6,8,10,12,14,16,18,0]);
+  t.deepEqual(_.map(x => x * 2).apply(null, test), [2,4,6,8,10,12,14,16,18,0]);
   t.deepEqual(test, static, 'immutability test');
   t.comment(''); t.comment(''); t.comment('');
   t.end();
 });
 
 test('Unfolds (Import from Compose)', t => {
-  t.deepEqual($.range(1,10), [1,2,3,4,5,6,7,8,9], 'Range');
+  t.deepEqual(_.range(1,10), [1,2,3,4,5,6,7,8,9], 'Range');
   t.comment('\n\n\n');
   t.end();
 });
@@ -38,10 +38,10 @@ test('FFP.curry and FFP.chain', t => {
   var static = [1,2,3,4,5,6,7,8,9,0];
   var test   = [1,2,3,4,5,6,7,8,9,0];
 
-  var oneArgs = source => $.curry($.map(x => x + 1)).apply(null, source);
-  var twoArgs = source => $.curry($.map(x => x + 1), $.map(x => x * 2)).apply(null, source);
-  var threeArgs = source => $.curry($.map(x => x + 1), $.map(x => x * 2), $.map(x => x - 1)).apply(null, source);
-  t.deepEqual($.curry().apply(null, test), static, 'curry zero arguments');
+  var oneArgs = source => _.curry(_.map(x => x + 1)).apply(null, source);
+  var twoArgs = source => _.curry(_.map(x => x + 1), _.map(x => x * 2)).apply(null, source);
+  var threeArgs = source => _.curry(_.map(x => x + 1), _.map(x => x * 2), _.map(x => x - 1)).apply(null, source);
+  t.deepEqual(_.curry().apply(null, test), static, 'curry zero arguments');
   t.deepEqual(oneArgs(test), [2,3,4,5,6,7,8,9,10,1], 'curry(one) - of array');
   t.deepEqual(twoArgs(test), [4,6,8,10,12,14,16,18,20,2], 'curry(first, second) - of array');
   t.deepEqual(threeArgs(test), [3,5,7,9,11,13,15,17,19,1], 'curry(first, second, third) - of array');
@@ -53,10 +53,10 @@ test('FFP.curry and FFP.chain', t => {
 
   t.comment('FFP.chain');
   t.deepEqual(
-    $.chain(test)(
-      $.map(x => x + 1)
-      ,$.sieve(x => x % 2 === 1)
-      ,$.map(x => x * x)
+    _.chain(test)(
+      _.map(x => x + 1)
+      ,_.sieve(x => x % 2 === 1)
+      ,_.map(x => x * x)
     ),
     [9,25,49,81 ,1], 'on an array'
   );
@@ -109,44 +109,44 @@ test('Chainability of FFP.flatten', t => {
   var static = [1,2,3,[4,5,[],[6,[7,[8],[[9]]]]]];
   var test   = [1,2,3,[4,5,[],[6,[7,[8],[[9]]]]]];
   t.deepEqual(
-    $.flatten(5).apply(null, test),
+    _.flatten(5).apply(null, test),
     [1,2,3,4,5,6,7,8,9],
     'just testing if flatten works'
   );
 
   t.deepEqual(
-    $.chain(test)(
-      $.sieve(x => isArrayLike(x))
-      ,$.flatten(2)
+    _.chain(test)(
+      _.sieve(x => isArrayLike(x))
+      ,_.flatten(2)
     ),
     [4,5,6,[7,[8],[[9]]]],
     'before'
   );
 
   t.deepEqual(
-    $.chain(test)(
-      $.sieve(x => isArrayLike(x))
-      ,$.flatten(5)
-      ,$.chunk(3)
+    _.chain(test)(
+      _.sieve(x => isArrayLike(x))
+      ,_.flatten(5)
+      ,_.chunk(3)
     ),
     [[4,5,6], [7,8,9]],
     'inbetween'
   );
   t.deepEqual(
-    $.chain(test)(
-      $.flatten(1)
-      ,$.map(x => [x])
+    _.chain(test)(
+      _.flatten(1)
+      ,_.map(x => [x])
     ),
     [[1],[2],[3],[4],[5],[[]],[[6,[7,[8],[[9]]]]]],
     'after'
   );
 
   t.deepEqual(
-    $.chain(test)(
-      $.sieve(x => isArrayLike(x))
-      ,$.flatten(2)
-      ,$.flatten(3)
-      ,$.chunk(3)
+    _.chain(test)(
+      _.sieve(x => isArrayLike(x))
+      ,_.flatten(2)
+      ,_.flatten(3)
+      ,_.chunk(3)
     ),
     [[4,5,6], [7,8,9]],
     'double'
@@ -160,23 +160,23 @@ test('Chainability of FFP.flatten', t => {
 test('FFP.flatten edge cases', t => {
   var static = [1,2,3,[4,5,[],[6,[7,[8],[[9]]]]]];
   var test   = [1,2,3,[4,5,[],[6,[7,[8],[[9]]]]]];
-  t.deepEqual($.flatten(0).apply(null, test), static, 'zero');
-  t.deepEqual($.chain(test)($.flatten(0), $.sieve(x => isArrayLike(x))),
+  t.deepEqual(_.flatten(0).apply(null, test), static, 'zero');
+  t.deepEqual(_.chain(test)(_.flatten(0), _.sieve(x => isArrayLike(x))),
     [[4,5,[],[6,[7,[8],[[9]]]]]], 'zero - chain before'
   );
-  t.deepEqual($.chain(test)($.map(x => [x]), $.flatten(0), $.map(x => x.length)),
+  t.deepEqual(_.chain(test)(_.map(x => [x]), _.flatten(0), _.map(x => x.length)),
     [1,1,1,1], 'zero - chain inbetween'
   );
-  t.deepEqual($.chain(test)($.map(x => [x]), $.flatten(0), $.sieve(x => isArrayLike(x))),
+  t.deepEqual(_.chain(test)(_.map(x => [x]), _.flatten(0), _.sieve(x => isArrayLike(x))),
     [[1],[2],[3],[[4,5,[],[6,[7,[8],[[9]]]]]]], 'zero - chain after'
   );
 
   var static2 = [1,2,3,4,5,6,7,[8],[[9]]];
   var threeFlatten = [1,2,3,4,5,6,7,[8],[[9]]];
-  t.deepEqual($.chain(test)($.flatten(0), $.flatten(0)), static, '.flatten(0).flatten(0)');
-  t.deepEqual($.chain(test)($.flatten(3), $.flatten(0)), threeFlatten, '.flatten(three).flatten(0)');
-  t.deepEqual($.chain(test)($.flatten(0), $.flatten(3)), threeFlatten, '.flatten(0).flatten(three)');
-  t.deepEqual($.chain(test)($.flatten(1), $.flatten(0), $.flatten(0), $.flatten(2)),
+  t.deepEqual(_.chain(test)(_.flatten(0), _.flatten(0)), static, '.flatten(0).flatten(0)');
+  t.deepEqual(_.chain(test)(_.flatten(3), _.flatten(0)), threeFlatten, '.flatten(three).flatten(0)');
+  t.deepEqual(_.chain(test)(_.flatten(0), _.flatten(3)), threeFlatten, '.flatten(0).flatten(three)');
+  t.deepEqual(_.chain(test)(_.flatten(1), _.flatten(0), _.flatten(0), _.flatten(2)),
     threeFlatten, '.flatten(two).flatten(0).flatten(0).flatten(three)');
   t.deepEqual(test, static, 'immutability test 1');
   t.deepEqual(threeFlatten, static2, 'immutability test 2');

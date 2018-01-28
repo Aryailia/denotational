@@ -2,8 +2,8 @@
 // really trust the results
 
 const {Suite} = require('benchmark');
-const {_} = require('../../fp');
-const imp = require('../../fp/imperativeFp');
+const {_} = require('../../index');
+const imp = require('../../src/imperative');
 const {shuffle} = require('./RnDUtils');
 
 const test = shuffle([0,1,2]);

@@ -16,7 +16,7 @@
 'use strict';
 
 const {Suite} = require('benchmark');
-const {_} = require('../../fp');
+const {_} = require('../../index');
 const {shuffle} = require('./RnDUtils');
 
 var large = shuffle(_.range(0,1000).map((x, i) => i));

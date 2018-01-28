@@ -1,1 +1,1 @@
-const Lazy = require('../fp/lazy')(Utils, $);
+const {Lazy} = require('../index');

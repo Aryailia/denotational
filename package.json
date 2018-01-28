@@ -1,11 +1,8 @@
 {
-  "name": "TBD",
+  "name": "denotational",
   "version": "0.1.0",
-  "description": "",
-  "main": "fp.js",
-  "directories": {
-    "test": "test"
-  },
+  "description": "Another functional library. Detonational syntax lazy evaluation, eager evaluation, and for the reactive model.",
+  "main": "index.js",
   "dependencies": {},
   "devDependencies": {
     "benchmark": "^2.1.4",
@@ -17,12 +14,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Aryailia/pipe.git"
+    "url": "git+https://github.com/Aryailia/denotational.git"
   },
-  "author": "Aryailia",
+  "author": "Aryailia <ryailia.ara@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Aryailia/pipe/issues"
+    "url": "https://github.com/Aryailia/denotational/issues"
   },
-  "homepage": "https://github.com/Aryailia/pipe#readme"
+  "homepage": "https://github.com/Aryailia/denotational#readme"
 }
